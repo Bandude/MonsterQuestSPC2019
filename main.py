@@ -241,16 +241,21 @@ while totalEnemies > 0:
     for i in enemyArray:
         n = i
         if(enemyArray[n][1] != 0):
-            print(n)
+            print('\x1b[1;31;40m' + n +  '\x1b[0m')
         else:
             totalEnemies -= 1
     
-           
-    enemy = input("Pick Your Enemy: ")
-    type(enemy)
+
+    #Choos enemy    
+    enemy = ""
     while enemy == "":
-        enemy = input("No Enemy Selected, Try Again: ")
+        enemy = input("Pick Your Enemy: ")
         type(enemy)
+        if enemy in enemyArray:
+            continue
+        else:
+            print("No Enemy Selected, Try Again")
+            enemy = ""
     
     print(clear)
     
