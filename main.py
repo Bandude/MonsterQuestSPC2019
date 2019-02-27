@@ -16,9 +16,16 @@ PlayerAttackPower = 6               #How strong your Attack is
 
 
 
-#Rolls Dice Given the type of dice to roll
-def dice(x):
-  return randint(1,x)
+#Rolls Dice Given the type of dice to roll, x is type of dice, y is how many rolls
+def dice(x, y):
+    roll = 1                        #roll counter
+    total = 0                       #sum total between the rolls
+    #print(str(y) + "How Many Rolls")
+    while roll <= y:
+        #print(str(randint(1,x)) + "   " + str(x))
+        total += randint(1,x)
+        roll += 1
+    return total
 
 #display the health
 def displayHealth(name, currHealth, totalHealth, armor, weapon):
@@ -136,8 +143,8 @@ O `'I `` \
 #attack  (attacker name, defender name, armor, health, OrigHealth)
 def attack(attacker, weapon, strengh, attack, defender, armor, health, OrigHealth, isEnemy):
     print(attacker + " Attacks " + defender)
-    if strengh + dice(20) > armor:
-        damage = weapon + dice(int(attack))
+    if strengh + dice(20, 1) > armor:
+        damage = weapon + dice(int(attack), 1)
         health = health - damage
         if health > 0:
             print('\x1b[1;31;40m' + attacker + " Hits for " + str(damage) + '\x1b[0m' )
@@ -189,9 +196,9 @@ def heal(item):
 #looting funciton
 def loot(luck):
     switch = {
-        1: ["Potion of Healing",(dice(4) * 2) + 2, "heal"],
-        2: ["Potion of Greater Healing",(dice(4) * 4) + 4, "heal"],
-        3: ["Meteor Swarm",(dice(6) * 20) + (dice(6) * 20), "spell"],
+        1: ["Potion of Healing",dice(4, 2) + 2, "heal"],
+        2: ["Potion of Greater Healing",dice(4, 4) + 4, "heal"],
+        3: ["Meteor Swarm",dice(6, 20), "spell"],
         4: ["Sheild Of Valor",15, "armor"],
         5: ["King Aurthors Sword",12, "weapon"]
     } 
@@ -201,7 +208,7 @@ def loot(luck):
     else: 
         maxchance = 15
         
-    chance = dice(maxchance)    #Roll Dice to randomize the chance of an item
+    chance = dice(maxchance, 1)    #Roll Dice to randomize the chance of an item
     selected = switch.get(chance, "You Found Nothing")
     if(selected[0] != "You Found Nothing"): 
         newItem = I_Item(selected[0], selected[1], selected[2])
@@ -223,14 +230,15 @@ type(PlayerName)
 print('Welcome ' + PlayerName + ' your adventure begins now')
 
 #Inventory, starts with single healing potion.
-PlayerInventory = [I_Item("Potion of Healing",(dice(4) * 2) + 2, "heal")]    
+PlayerInventory = [I_Item("Potion of Healing",dice(4,2) + 2, "heal")]    
 
-#Name, Health, strengh, armor, attack (what type of dice), weapon
+#Name, Health (Calls Dice), strengh, armor, attack (what type of dice), weapon
+#Dice is how many sides x, and how many rolls y dice(x,y)
 enemyArray = {}
-enemyArray['Rat'] = ['Rat', dice(4), 2, 10, 1, [0, "bite"]]
-enemyArray['Spider'] = ['Spider', dice(4),2, 12, 1, [0, "bite"]]
-enemyArray['Skeleton'] = ['Skeleton', dice(8) * 2, 10, 13, 6, [4, "axe"]]
-enemyArray['Stone Giant'] = ['Stone Giant', dice(12) * 12, 23, 17, 24, [9,"Huge Club"]]
+enemyArray['Rat'] = ['Rat', dice(4,1), 2, 10, 1, [0, "bite"]]
+enemyArray['Spider'] = ['Spider', dice(4,1),2, 12, 1, [0, "bite"]]
+enemyArray['Skeleton'] = ['Skeleton', dice(8,2), 10, 13, 6, [4, "axe"]]
+enemyArray['Stone Giant'] = ['Stone Giant', dice(12,12), 23, 17, 24, [9,"Huge Club"]]
 
 totalEnemies = len(enemyArray)
 
@@ -289,9 +297,9 @@ while totalEnemies > 0:
             elif(result.typ == "armor"):
                 PlayerArmor = result.amount
                 print("Your Armor Has been updated to " + str(result.amount))
-            elif(result.typ == "sword"):
+            elif(result.typ == "weapon"):
                 PlayerWeapon = result.amount
-                print("Your sword Has been updated to " + str(result.amount))
+                print("Your weapon Has been updated to " + str(result.amount))
         elif(choice == "S"):
             EnemyHealth = attack(PlayerName, PlayerWeapon[0], PlayerStrengh, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
         elif(choice == "L"):
