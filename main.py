@@ -298,7 +298,8 @@ while totalEnemies > 0:
                 PlayerArmor = result.amount
                 print("Your Armor Has been updated to " + str(result.amount))
             elif(result.typ == "weapon"):
-                PlayerWeapon = result.amount
+                PlayerWeapon[0] = result.amount
+                PlayerWeapon[1] = result.name
                 print("Your weapon Has been updated to " + str(result.amount))
         elif(choice == "S"):
             EnemyHealth = attack(PlayerName, PlayerWeapon[0], PlayerStrengh, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
