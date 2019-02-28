@@ -2,11 +2,11 @@
 from random import randint          #imports random function
 
 clear = "\n" * 100                  #Set to Clear Screen For better viewing
-global PlayerHealth                 #Global Variabl to control PlayerHealth, 
+global PlayerHealth                 #Global Variable to control PlayerHealth, 
 global playerInventory              #and Player Inventory
 
 #Your stats
-PlayerStrengh = 5                   #determins how likley you are to hit.
+PlayerStrength = 5                  #determines how likely you are to hit.
 PlayerArmor = 10                    #defends against hits
 PlayerHealth = 20                   #How much HP you have
 PlayerLuck = 15                     #How much luck for loot
@@ -141,9 +141,9 @@ O `'I `` \
 
 
 #attack  (attacker name, defender name, armor, health, OrigHealth)
-def attack(attacker, weapon, strengh, attack, defender, armor, health, OrigHealth, isEnemy):
+def attack(attacker, weapon, Strength, attack, defender, armor, health, OrigHealth, isEnemy):
     print(attacker + " Attacks " + defender)
-    if strengh + dice(20, 1) > armor:
+    if Strength + dice(20, 1) > armor:
         damage = weapon + dice(int(attack), 1)
         health = health - damage
         if health > 0:
@@ -232,7 +232,7 @@ print('Welcome ' + PlayerName + ' your adventure begins now')
 #Inventory, starts with single healing potion.
 PlayerInventory = [I_Item("Potion of Healing",dice(4,2) + 2, "heal")]    
 
-#Name, Health (Calls Dice), strengh, armor, attack (what type of dice), weapon
+#Name, Health (Calls Dice), Strength, armor, attack (what type of dice), weapon
 #Dice is how many sides x, and how many rolls y dice(x,y)
 enemyArray = {}
 enemyArray['Rat'] = ['Rat', dice(4,1), 2, 10, 1, [0, "bite"]]
@@ -272,7 +272,7 @@ while totalEnemies > 0:
     EnemyHealth = enemyArray[enemy][1]
     EnemyName = enemyArray[enemy][0]
     EnemyArmor = enemyArray[enemy][3]
-    EnemyStrengh = enemyArray[enemy][2]
+    EnemyStrength = enemyArray[enemy][2]
     EnemyWeapon = enemyArray[enemy][5]
     EnemyAttack = enemyArray[enemy][4]
     
@@ -293,7 +293,7 @@ while totalEnemies > 0:
             if(result == 0):
                 print(clear)
             elif(result.typ == "spell"):
-                EnemyHealth = attack(PlayerName, result.amount, PlayerStrengh, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
+                EnemyHealth = attack(PlayerName, result.amount, PlayerStrength, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
             elif(result.typ == "armor"):
                 PlayerArmor = result.amount
                 print("Your Armor Has been updated to " + str(result.amount))
@@ -302,7 +302,7 @@ while totalEnemies > 0:
                 PlayerWeapon[1] = result.name
                 print("Your weapon Has been updated to " + str(result.amount))
         elif(choice == "S"):
-            EnemyHealth = attack(PlayerName, PlayerWeapon[0], PlayerStrengh, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
+            EnemyHealth = attack(PlayerName, PlayerWeapon[0], PlayerStrength, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
         elif(choice == "L"):
             loot(PlayerLuck)
 
@@ -313,7 +313,7 @@ while totalEnemies > 0:
             input('\x1b[0;31;47m' + "Prepare to be attacked!!!! " + '\x1b[0m' + "\n Press Enter to Continue")
             print(clear)
             print("-----------------------")
-            PlayerHealth = attack(EnemyName, EnemyWeapon[0], EnemyStrengh, EnemyAttack, PlayerName, PlayerArmor, PlayerHealth, PlayerOrgHealth, False)
+            PlayerHealth = attack(EnemyName, EnemyWeapon[0], EnemyStrength, EnemyAttack, PlayerName, PlayerArmor, PlayerHealth, PlayerOrgHealth, False)
             input("Press Enter to Continue")
             print(clear)
         else:
