@@ -167,7 +167,7 @@ def attack(attacker, weapon, Strength, attack, defender, armor, health, OrigHeal
 
 
 def openInventory(playerInventory):
-    pi = PlayerInventory[:]
+    pi = playerInventory[:]
     if(len(pi) == 0):
         input("You Have No Inventory..Press Enter to Continue")
         return 0
@@ -180,17 +180,17 @@ def openInventory(playerInventory):
         type(c)
         if(pi[c].typ == "heal"):
             heal(playerInventory[c]) #send player choice to heal funciton
-            del(PlayerInventory[c]) #removes item from inventory
-            return pi[c]
+            del(playerInventory[c]) #removes item from inventory
+            return pi[c]             #returns the inventory item so you know how to use it
         else:
-            del(PlayerInventory[c])
-            return pi[c]
+            del(playerInventory[c]) #deletes the inventory item
+            return pi[c]            #returns the inventory item so you know how to use it
     
 
 #healing function 
 def heal(item):
-    global PlayerHealth
-    PlayerHealth += item.amount
+    global PlayerHealth             #python needs this so it knows you're using the global variable
+    PlayerHealth += item.amount     #add the current player health to the item you used
     print("You have Healed Yourself for " + str(item.amount) + " HP")
 
 #looting funciton
@@ -202,17 +202,18 @@ def loot(luck):
         4: ["Sheild Of Valor",15, "armor"],
         5: ["King Aurthors Sword",12, "weapon"]
     } 
+    maxchance = 15                     #change this if you want to make it harder to find things or you have more items
     itemtotal = len(switch)  
-    if(luck > 15-itemtotal):    #if your luck is too high it adjust so you always find something
+    if(luck > maxchance-itemtotal):    #if your luck is too high it adjust so you always find something
         maxchance = itemtotal
     else: 
         maxchance = 15
         
     chance = dice(maxchance, 1)    #Roll Dice to randomize the chance of an item
-    selected = switch.get(chance, "You Found Nothing")
+    selected = switch.get(chance, "You Found Nothing") #if chance equals one of the switch itmes then you get an item
     if(selected[0] != "You Found Nothing"): 
-        newItem = I_Item(selected[0], selected[1], selected[2])
-        PlayerInventory.append(newItem)
+        newItem = I_Item(selected[0], selected[1], selected[2])  #create the item
+        PlayerInventory.append(newItem)  #add that item (object) to the inventory array
     else:
         print("You Found Nothing")
         
