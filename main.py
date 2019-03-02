@@ -6,13 +6,15 @@ global PlayerHealth                 #Global Variable to control PlayerHealth,
 global playerInventory              #and Player Inventory
 
 #Your stats
-PlayerStrength = 5                  #determines how likely you are to hit.
+PlayerStrength = 3                  #determines how likely you are to hit. Modifier value
+PBonus = 2                          #proficiency bonus, this would go up if you leveled up.
 PlayerArmor = 10                    #defends against hits
 PlayerHealth = 20                   #How much HP you have
 PlayerLuck = 15                     #How much luck for loot
 PlayerOrgHealth = PlayerHealth      #Original Health to show progress
-PlayerWeapon = [4, "Long Sword"]    #How much damage your weapon adds to your hits, name of weapon
-PlayerAttackPower = 6               #How strong your Attack is
+PlayerWeapon = [8, "Long Sword"]    #Type of Dice, Name is in Second Position
+
+PlayerAtkBonus = PlayerStrength + PBonus   #How strong your Attack is
 
 
 
@@ -20,7 +22,6 @@ PlayerAttackPower = 6               #How strong your Attack is
 def dice(x, y):
     roll = 1                        #roll counter
     total = 0                       #sum total between the rolls
-    #print(str(y) + "How Many Rolls")
     while roll <= y:
         #print(str(randint(1,x)) + "   " + str(x))
         total += randint(1,x)
@@ -140,17 +141,19 @@ O `'I `` \
     print(switch.get(name, "No Image"))
 
 
-#attack  (attacker name, defender name, armor, health, OrigHealth)
-def attack(attacker, weapon, Strength, attack, defender, armor, health, OrigHealth, isEnemy):
+#attack  (attacker name, Attacker Weapon hit, Attacker Bonus, strength, defender name, defender armor, defender health, defender OrigHealth)
+def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, defOrigHealth, isEnemy):
     print(attacker + " Attacks " + defender)
-    if Strength + dice(20, 1) > armor:
-        damage = weapon + dice(int(attack), 1)
-        health = health - damage
-        if health > 0:
+    if atkBonus + dice(20, 1) > defArmor:
+        if strength < 0:
+            strength = 0
+        damage = strength + dice(int(weapon), 1)
+        defHealth = defHealth - damage
+        if defHealth > 0:
             print('\x1b[1;31;40m' + attacker + " Hits for " + str(damage) + '\x1b[0m' )
             displayHit()
-            print(defender + " has " + str(health) + " out of " + str(OrigHealth) + " health remaining")
-            return health
+            print(defender + " has " + str(defHealth) + " out of " + str(defOrigHealth) + " health remaining")
+            return defHealth
         else:
             print(attacker + " Killed " + defender + " with " + str(damage) + " damage (✖╭╮✖)")
             if(isEnemy):
@@ -162,8 +165,8 @@ def attack(attacker, weapon, Strength, attack, defender, armor, health, OrigHeal
             return 0 
     else:
         print('\x1b[1;36;43m' + attacker + " Missed!!" +  '\x1b[0m')
-        print(defender + " has " + str(health) + " out of " + str(OrigHealth) + " health remaining")
-        return health
+        print(defender + " has " + str(defHealth) + " out of " + str(defOrigHealth) + " health remaining")
+        return defHealth
 
 
 def openInventory(playerInventory):
@@ -233,13 +236,13 @@ print('Welcome ' + PlayerName + ' your adventure begins now')
 #Inventory, starts with single healing potion.
 PlayerInventory = [I_Item("Potion of Healing",dice(4,2) + 2, "heal")]    
 
-#Name, Health (Calls Dice), Strength, armor, attack (what type of dice), weapon
+#Name, Health (Calls Dice), StrengthModifier, armor, atackBonus, weapon(dice, name)
 #Dice is how many sides x, and how many rolls y dice(x,y)
 enemyArray = {}
-enemyArray['Rat'] = ['Rat', dice(4,1), 2, 10, 1, [0, "bite"]]
-enemyArray['Spider'] = ['Spider', dice(4,1),2, 12, 1, [0, "bite"]]
-enemyArray['Skeleton'] = ['Skeleton', dice(8,2), 10, 13, 6, [4, "axe"]]
-enemyArray['Stone Giant'] = ['Stone Giant', dice(12,12), 23, 17, 24, [9,"Huge Club"]]
+enemyArray['Rat'] = ['Rat', dice(4,1), -4, 10, 0, [1, "bite"]]
+enemyArray['Spider'] = ['Spider', dice(4,1)-1,-4, 12, 4, [1, "bite"]]
+enemyArray['Skeleton'] = ['Skeleton', dice(8,2) + 4, 0, 13, 4, [6, "axe"]]
+enemyArray['Stone Giant'] = ['Stone Giant', dice(12,11)+55, 6, 17, 9, [8,"Huge Club"]]
 
 totalEnemies = len(enemyArray)
 
@@ -269,13 +272,13 @@ while totalEnemies > 0:
     print(clear)
     
     #Sets All the Enemy Stats
+    EnemyName = enemyArray[enemy][0]
     EnemyOrigHealth = enemyArray[enemy][1]
     EnemyHealth = enemyArray[enemy][1]
-    EnemyName = enemyArray[enemy][0]
-    EnemyArmor = enemyArray[enemy][3]
     EnemyStrength = enemyArray[enemy][2]
-    EnemyWeapon = enemyArray[enemy][5]
+    EnemyArmor = enemyArray[enemy][3]
     EnemyAttack = enemyArray[enemy][4]
+    EnemyWeapon = enemyArray[enemy][5]
     
     #print(str(EnemyName) + " has " + str(EnemyHealth) + " Health")
     while EnemyHealth > 0:
@@ -294,7 +297,7 @@ while totalEnemies > 0:
             if(result == 0):
                 print(clear)
             elif(result.typ == "spell"):
-                EnemyHealth = attack(PlayerName, result.amount, PlayerStrength, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
+                EnemyHealth = attack(PlayerName, result.amount, result.amount, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
             elif(result.typ == "armor"):
                 PlayerArmor = result.amount
                 print("Your Armor Has been updated to " + str(result.amount))
@@ -303,7 +306,7 @@ while totalEnemies > 0:
                 PlayerWeapon[1] = result.name
                 print("Your weapon Has been updated to " + str(result.amount))
         elif(choice == "S"):
-            EnemyHealth = attack(PlayerName, PlayerWeapon[0], PlayerStrength, PlayerAttackPower, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
+            EnemyHealth = attack(PlayerName, PlayerWeapon[0], PlayerAtkBonus, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
         elif(choice == "L"):
             loot(PlayerLuck)
 
@@ -314,18 +317,12 @@ while totalEnemies > 0:
             input('\x1b[0;31;47m' + "Prepare to be attacked!!!! " + '\x1b[0m' + "\n Press Enter to Continue")
             print(clear)
             print("-----------------------")
-            PlayerHealth = attack(EnemyName, EnemyWeapon[0], EnemyStrength, EnemyAttack, PlayerName, PlayerArmor, PlayerHealth, PlayerOrgHealth, False)
+            PlayerHealth = attack(EnemyName, EnemyWeapon[0], EnemyAttack, EnemyStrength, PlayerName, PlayerArmor, PlayerHealth, PlayerOrgHealth, False)
             input("Press Enter to Continue")
             print(clear)
         else:
             print('\x1b[0;31;47m' + "You Search For Loot" + '\x1b[0m')
             loot(PlayerLuck) #loot the body
     
-
-
-    
-
-
-
 
 
