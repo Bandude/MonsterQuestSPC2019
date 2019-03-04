@@ -12,7 +12,7 @@ PlayerArmor = 10                    #defends against hits
 PlayerHealth = 20                   #How much HP you have
 PlayerLuck = 15                     #How much luck for loot
 PlayerOrgHealth = PlayerHealth      #Original Health to show progress
-PlayerWeapon = [8, "Long Sword"]    #Type of Dice, Name is in Second Position
+PlayerWeapon = [8, 1, "Long Sword"] #Type of Dice, Name is in Second Position
 
 PlayerAtkBonus = PlayerStrength + PBonus   #How strong your Attack is
 
@@ -32,7 +32,7 @@ def dice(x, y):
 def displayHealth(name, currHealth, totalHealth, armor, weapon):
     health = round(round((currHealth / totalHealth) * 100) / 10) * 2
     spaces = 20 - health
-    printout = name.ljust(15) +'[' + '\x1b[3;31;40m' + ('█' * health) + ' ' * spaces +  '\x1b[0m' + '] '  + str(currHealth).ljust(3) + 'HP\n'.ljust(18) +  '\x1b[0;37;44m' + 'AC│╬│:' + str(armor).ljust(2) +  '\x1b[0m' +"  ══╫∞" + '\x1b[0;37;42m' + weapon[1].ljust(20) + ':' + str(weapon[0]).ljust(2) +  '\x1b[0m' 
+    printout = name.ljust(15) +'[' + '\x1b[3;31;40m' + ('█' * health) + ' ' * spaces +  '\x1b[0m' + '] '  + str(currHealth).ljust(3) + 'HP\n'.ljust(18) +  '\x1b[0;37;44m' + 'AC│╬│:' + str(armor).ljust(2) +  '\x1b[0m' +"  ══╫∞" + '\x1b[0;37;42m' + weapon[2].ljust(20) + ':' + str(weapon[0]).ljust(2) +  '\x1b[0m' 
     print(printout)
 
 #print death
@@ -144,10 +144,15 @@ O `'I `` \
 #attack  (attacker name, Attacker Weapon hit, Attacker Bonus, strength, defender name, defender armor, defender health, defender OrigHealth)
 def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, defOrigHealth, isEnemy):
     print(attacker + " Attacks " + defender)
-    if atkBonus + dice(20, 1) > defArmor:
-        if strength < 0:
+    attackRoll = dice(20, 1) #roll D20 for attack
+    print("Rolled " + str(attackRoll) + " + " + str(atkBonus) + "(AtkBns) = " + str(atkBonus +  attackRoll))
+    if atkBonus +  attackRoll > defArmor or attackRoll == "20":  #if better than armor or d20 critical hit
+        if strength < 0:    #weak enemies were hiting for positive health.
             strength = 0
-        damage = strength + dice(int(weapon), 1)
+        damage = strength + dice(weapon[0], weapon[1])
+        if(attackRoll == "20"):  #if roll 20 Critical HIT add another roll to the damage
+            print('\x1b[1;31;40m' + "Critical HIT!!!!!!" + '\x1b[0m')
+            damage += dice(weapon[0], weapon[1])
         defHealth = defHealth - damage
         if defHealth > 0:
             print('\x1b[1;31;40m' + attacker + " Hits for " + str(damage) + '\x1b[0m' )
@@ -236,13 +241,14 @@ print('Welcome ' + PlayerName + ' your adventure begins now')
 #Inventory, starts with single healing potion.
 PlayerInventory = [I_Item("Potion of Healing",dice(4,2) + 2, "heal")]    
 
-#Name, Health (Calls Dice), StrengthModifier, armor, atackBonus, weapon(dice, name)
+#Name, Health (Calls Dice), StrengthModifier, armor, atackBonus, weapon(dice, how many dice, name)
 #Dice is how many sides x, and how many rolls y dice(x,y)
+#Make sure enemy weapon has 3 values, [Dice, HowManyRolls, Name]
 enemyArray = {}
-enemyArray['Rat'] = ['Rat', dice(4,1), -4, 10, 0, [1, "bite"]]
-enemyArray['Spider'] = ['Spider', dice(4,1)-1,-4, 12, 4, [1, "bite"]]
-enemyArray['Skeleton'] = ['Skeleton', dice(8,2) + 4, 0, 13, 4, [6, "axe"]]
-enemyArray['Stone Giant'] = ['Stone Giant', dice(12,11)+55, 6, 17, 9, [8,"Huge Club"]]
+enemyArray['Rat'] = ['Rat', 100, -4, 10, 0, [1, 1, "bite"]]
+enemyArray['Spider'] = ['Spider', dice(4,1)-1,-4, 12, 4, [1, 1, "bite"]]
+enemyArray['Skeleton'] = ['Skeleton', dice(8,2) + 4, 0, 13, 4, [6, 1, "axe"]]
+enemyArray['Stone Giant'] = ['Stone Giant', dice(12,11)+55, 6, 17, 9, [8, 3, "Huge Club"]]
 
 totalEnemies = len(enemyArray)
 
@@ -286,38 +292,46 @@ while totalEnemies > 0:
         displayHealth(EnemyName, EnemyHealth, EnemyOrigHealth, EnemyArmor, EnemyWeapon)
         displayHealth(PlayerName, PlayerHealth, PlayerOrgHealth, PlayerArmor, PlayerWeapon)
         print("-----------------------")
-        choice = input("Choose What to Do: \n I - Inventory \n S - Attack with Sword \n L - Search For Loot \n Your Choice: ")
+        #List Options
+        menu = {
+                "I": "Inventory",
+                "A": "Attack with " + PlayerWeapon[2],
+                "L": "Loot"
+        } 
+        for key, value in menu.items():
+            print(key + "-" + value)
+        choice = input("Your Choice: ")
         type(choice)
+        selected = menu.get(choice, "You Selected Nothing")
+
         print(clear)
         
-        if(choice == "I"):
+        if(choice == "I"):  #If inventory
             print(clear)
             print(PlayerName + " Opens Inventory")
             result = openInventory(PlayerInventory)
             if(result == 0):
                 print(clear)
             elif(result.typ == "spell"):
-                EnemyHealth = attack(PlayerName, result.amount, result.amount, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
+                EnemyHealth = attack(PlayerName, [result.amount, 1, result.name], result.amount, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
             elif(result.typ == "armor"):
                 PlayerArmor = result.amount
                 print("Your Armor Has been updated to " + str(result.amount))
             elif(result.typ == "weapon"):
                 PlayerWeapon[0] = result.amount
-                PlayerWeapon[1] = result.name
+                PlayerWeapon[2] = result.name
                 print("Your weapon Has been updated to " + str(result.amount))
-        elif(choice == "S"):
-            EnemyHealth = attack(PlayerName, PlayerWeapon[0], PlayerAtkBonus, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
-        elif(choice == "L"):
+        elif(choice == "A"): #If attack
+            EnemyHealth = attack(PlayerName, PlayerWeapon, PlayerAtkBonus, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True)
+        elif(choice == "L"): #If Loot
             loot(PlayerLuck)
 
-            
-        
         
         if(EnemyHealth > 0):
             input('\x1b[0;31;47m' + "Prepare to be attacked!!!! " + '\x1b[0m' + "\n Press Enter to Continue")
             print(clear)
             print("-----------------------")
-            PlayerHealth = attack(EnemyName, EnemyWeapon[0], EnemyAttack, EnemyStrength, PlayerName, PlayerArmor, PlayerHealth, PlayerOrgHealth, False)
+            PlayerHealth = attack(EnemyName, EnemyWeapon, EnemyAttack, EnemyStrength, PlayerName, PlayerArmor, PlayerHealth, PlayerOrgHealth, False)
             input("Press Enter to Continue")
             print(clear)
         else:
