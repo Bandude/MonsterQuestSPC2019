@@ -114,6 +114,21 @@ def displayHit():
 #dispay the enemey
 def displayImage(name):
     switch = {
+    "Worg" : r"""
+           _        _
+          /\\     ,'/|
+        _|  |\-'-'_/_/
+   __--'/`           \
+       /              \
+      /        "o.  |o"|
+      |              \/
+       \_          ___\
+         `--._`.   \;//
+              ;-.___,'
+             /
+           ,'
+        _-'
+        """,
     "Rat" : r"""               
       _  _  .-'   '-.
      (.)(.)/         \   
@@ -339,6 +354,7 @@ enemyArray['Rat'] = ['Rat', dice(4,1), -4, 10, 0, [1, 1, "bite"], 10]
 enemyArray['Spider'] = ['Spider', dice(4,1),-4, 12, 4, [1, 1, "bite"], 10]
 enemyArray['Skeleton'] = ['Skeleton', dice(8,2) + 4, 0, 13, 4, [6, 1, "axe"], 50]
 enemyArray['Stone Giant'] = ['Stone Giant', dice(12,11)+55, 6, 17, 9, [8, 3, "Huge Club"], 2900]
+enemyArray['Worg'] = ['Worg', dice(10, 4) + 4, 3, 13, 5, [6, 2, "Bite"], 100]
 
 totalEnemies = len(enemyArray)
 
