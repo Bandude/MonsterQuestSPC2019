@@ -1,52 +1,77 @@
-
 from random import randint          #imports random function
 from decimal import Decimal, ROUND_HALF_UP, ROUND_HALF_DOWN #for rounding
 
-#return the modifier for the proficiency bonus
-def profBounsCalc(value):
-    calc = (value-10)/2
-    if calc < 0:
-        profBonus = Decimal(calc).quantize(Decimal('1.'), rounding=ROUND_HALF_UP)
-    else:
-        profBonus = Decimal(calc).quantize(Decimal('1.'), rounding=ROUND_HALF_DOWN)
-    return profBonus
-
 
 clear = "\n" * 100                  #Set to Clear Screen For better viewing
-global PlayerHealth                 #Global Variable to control PlayerHealth, 
 global playerInventory              #and Player Inventory
-global PlayerXP                     #global player XP goes up on kills
-global PlayerLevel                  #Player Level goes up incrementally 
-global PBonus                       #proficiency bonus, this would go up if you leveled up.
 
-#Your stats
-PlayerStrength = profBounsCalc(18)  #determines how likely you are to hit. Modifier value
-PlayerLevel = 1                     #player Level
-PlayerXP = 0                        #player XP
-PBonus = 2
-PlayerArmor = 10                    #defends against hits
-PlayerHealth = 5000                  #How much HP you have
-PlayerLuck = 15                     #How much luck for loot
-PlayerOrgHealth = PlayerHealth      #Original Health to show progress
-PlayerWeapon = [8, 1, "Long Sword"] #Type of Dice, Name is in Second Position
 
-PlayerAtkBonus = PlayerStrength + PBonus   #How strong your Attack is
-
-print(PlayerStrength)
 #Rolls Dice Given the type of dice to roll, x is type of dice, y is how many rolls
 def dice(x, y):
     roll = 1                        #roll counter
     total = 0                       #sum total between the rolls
     while roll <= y:
-        #print(str(randint(1,x)) + "   " + str(x))
         total += randint(1,x)
         roll += 1
     return total
+
+#Figures out the modifier
+def modCalc(value):                        
+    calc = (value-10)/2
+    if calc < 0:
+        profBonus = int(Decimal(calc).quantize(Decimal('1.'), rounding=ROUND_HALF_UP))
+    else:
+        profBonus = int(Decimal(calc).quantize(Decimal('1.'), rounding=ROUND_HALF_DOWN))
+    return profBonus
+
+class I_Item:
+  def __init__(self, name, value, typ):
+    self.name = name
+    self.amount = value
+    self.typ = typ
+    print("You Found " + self.name )
+
+class PlayerClass:   #this is where you create a player
+    def __init__(self):
+        self.HitDice = 10                               #Hit Dice D&D healing and leveling
+        self.XP = 0
+        self.Level = 1
+        self.Prof = 2                                   #proficiency bonus
+        self.Strength = modCalc(18)
+        self.Constitution = modCalc(14)
+        self.Health = self.HitDice + self.Constitution   #staring only
+        self.Luck = 15
+        self.Armor = 18
+        self.MaxHealth = self.Health
+        self.Weapon = [8, 1, "Long Sword"] 
+        self.AtkBonus = self.Strength + self.Prof
+
+        response = input("What is your name? ")
+        type(response)
+        self.Name = response                       
+        print(clear)
+        
+
+    def printPlayer(self):
+        displayHealth(self.Name, self.Health, self.MaxHealth, self.Armor, self.Weapon)
+
+
+
+
+
+
+
+#return the modifier for the proficiency bonus
+
+
 
 #display the health
 def displayHealth(name, currHealth, totalHealth, armor, weapon):
     health = round(round((currHealth / totalHealth) * 100) / 10) * 2
     spaces = 20 - health
+    if(totalHealth < currHealth): #if over full health just put full bar
+        spaces = 0
+        health = 20
     printout = name.ljust(15) +'[' + '\x1b[3;31;40m' + ('█' * health) + ' ' * spaces +  '\x1b[0m' + '] '  + str(currHealth).ljust(3) + 'HP\n'.ljust(18) +  '\x1b[0;37;44m' + 'AC│╬│:' + str(armor).ljust(2) +  '\x1b[0m' +"  ══╫∞" + '\x1b[0;37;42m' + weapon[2].ljust(20) + ':' + str(weapon[0]).ljust(2) +  '\x1b[0m' 
     print(printout)
 
@@ -163,10 +188,7 @@ O `'I `` \
     print(switch.get(name, "No Image"))
 
 #level check
-def levelCheck(PlayerStrength):
-    global PlayerLevel
-    global PlayerXP
-    global PBonus
+def levelCheck(Player):
 
     L  = {} #LevelArray
     L[1] = [0,1,2]
@@ -190,18 +212,36 @@ def levelCheck(PlayerStrength):
     L[19] = [305000,19,6]
     L[30] = [355000,20,6]
 
-    while(PlayerXP >= L[PlayerLevel+1][0]):
-        PlayerLevel += 1
+    while(Player.XP >= L[Player.Level+1][0]):
+        Player.Level += 1
         displayImage("level")
-        print("You Leveled UP : " + str(PlayerLevel))
-        PBonus = L[PlayerLevel][2] + PlayerStrength #use chart to figure out proficiency bonus
+        print("You Leveled UP : " + str(Player.Level))
+        rollforhealth = input("Do you want to roll for health? (Y or N")
+        type(rollforhealth)
+        if(rollforhealth == "Y"):
+            roll = dice(Player.HitDice, 1)
+            Player.Health = ((roll + Player.Constitution) * Player.Level)  + Player.Constitution      #if you roll
+            Player.MaxHealth = Player.Health
+            print(clear)
+            print("You rolled a " + str(roll))
+            print("New Health " + str(Player.Health))
+        else:
+            Player.Health = (((Player.HitDice / 2) + 1 + Player.Constitution) * Player.Level) + Player.Constitution  #if no roll half hit dice plus one plus const
+            Player.MaxHealth = Player.Health
+            print(clear)
+            print("You rolled a " + str(roll))
+            print("New Health " + str(Player.Health))
+            
+        
+        Player.Prof = L[Player.Level][2] + Player.Strength #use chart to figure out proficiency bonus
+        Player.printPlayer()
+        
  
     
         
 
 #attack  (attacker name, Attacker Weapon hit, Attacker Bonus, strength, defender name, defender armor, defender health, defender OrigHealth)
-def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, defOrigHealth, isEnemy, XP):
-    global PlayerXP
+def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, defOrigHealth, isEnemy, XP, Player):
     print(attacker + " Attacks " + defender)
     attackRoll = dice(20, 1) #roll D20 for attack
     print("Rolled " + str(attackRoll) + " + " + str(atkBonus) + "(AtkBns) = " + str(atkBonus +  attackRoll))
@@ -221,8 +261,8 @@ def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, 
         else:
             print(attacker + " Killed " + defender + " with " + str(damage) + " damage (✖╭╮✖)")
             if(isEnemy):
-                PlayerXP += XP
-                levelCheck(strength)
+                Player.XP += XP
+                levelCheck(Player)
                 #enemyArray[defender][1] = 0 #Update the Enemy health
             else:
                 deathGraphic()
@@ -247,20 +287,14 @@ def openInventory(playerInventory):
             o += 1
         c = int(input("Choose Option: ")) - 1 #array starts at zero
         type(c)
-        if(pi[c].typ == "heal"):
-            heal(playerInventory[c]) #send player choice to heal funciton
-            del(playerInventory[c]) #removes item from inventory
-            return pi[c]             #returns the inventory item so you know how to use it
-        else:
-            del(playerInventory[c]) #deletes the inventory item
-            return pi[c]            #returns the inventory item so you know how to use it
+        del(playerInventory[c]) #deletes the inventory item
+        return pi[c]            #returns the inventory item so you know how to use it
     
 
 #healing function 
 def heal(item):
-    global PlayerHealth             #python needs this so it knows you're using the global variable
-    PlayerHealth += item.amount     #add the current player health to the item you used
     print("You have Healed Yourself for " + str(item.amount) + " HP")
+    return item.amount     #add the current player health to the item you used
 
 #looting funciton
 def loot(luck):
@@ -288,18 +322,11 @@ def loot(luck):
     else:
         print("You Found Nothing")
         
-    
-class I_Item:
-  def __init__(self, name, value, typ):
-    self.name = name
-    self.amount = value
-    self.typ = typ
-    print("You Found " + self.name )
+
 
 #Gets the Name of the Char
-PlayerName = input("What is your name? ")
-type(PlayerName)
-print('Welcome ' + PlayerName + ' your adventure begins now')
+Player = PlayerClass()
+Player.printPlayer()
 
 #Inventory, starts with single healing potion.
 PlayerInventory = [I_Item("Potion of Healing",dice(4,2) + 2, "heal")]    
@@ -318,7 +345,7 @@ totalEnemies = len(enemyArray)
 
 
 while totalEnemies > 0:
-    print("Your XP: "+ str(PlayerXP) + " | Level:" + str(PlayerLevel))  
+    print("Your XP: "+ str(Player.XP) + " | Level:" + str(Player.Level))  
     print("==============================================") 
     for i in enemyArray:
         n = i
@@ -355,12 +382,12 @@ while totalEnemies > 0:
     while EnemyHealth > 0:
         displayImage(EnemyName)
         displayHealth(EnemyName, EnemyHealth, EnemyOrigHealth, EnemyArmor, EnemyWeapon)
-        displayHealth(PlayerName, PlayerHealth, PlayerOrgHealth, PlayerArmor, PlayerWeapon)
+        Player.printPlayer()
         print("-----------------------")
         #List Options
         menu = {
                 "I": "Inventory",
-                "A": "Attack with " + PlayerWeapon[2],
+                "A": "Attack with " + Player.Weapon[2],
                 "L": "Loot"
         } 
         for key, value in menu.items():
@@ -373,37 +400,39 @@ while totalEnemies > 0:
         
         if(choice == "I"):  #If inventory
             print(clear)
-            print(PlayerName + " Opens Inventory")
+            print(Player.Name + " Opens Inventory")
             result = openInventory(PlayerInventory)
             if(result == 0):
                 print(clear)
+            elif(result.typ == "heal"):
+                Player.Health = heal(result)
             elif(result.typ == "spell"):
                 tempWeapon = [int(result.amount[0]), int(result.amount[1]), result.name]  #Sets the Spell as A weapon for one turn
-                EnemyHealth = attack(PlayerName, tempWeapon, 50, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True, EnemyXP)
+                EnemyHealth = attack(Player.Name, tempWeapon, 50, Player.Strength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True, EnemyXP, Player)
             elif(result.typ == "armor"):
-                PlayerArmor = result.amount
+                Player.Armor = result.amount
                 print("Your Armor Has been updated to " + str(result.amount))
             elif(result.typ == "weapon"):
-                PlayerWeapon[0] = result.amount[0] #dice
-                PlayerWeapon[1] = result.amount[1] #roll Amount
-                PlayerWeapon[2] = result.name      #weapon Name
+                Player.Weapon[0] = result.amount[0] #dice
+                Player.Weapon[1] = result.amount[1] #roll Amount
+                Player.Weapon[2] = result.name      #weapon Name
                 print("Your weapon Has been updated to " + str(result.amount))
         elif(choice == "A"): #If attack
-            EnemyHealth = attack(PlayerName, PlayerWeapon, PlayerAtkBonus, PlayerStrength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True, EnemyXP)
+            EnemyHealth = attack(Player.Name, Player.Weapon, Player.AtkBonus, Player.Strength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True, EnemyXP, Player)
         elif(choice == "L"): #If Loot
-            loot(PlayerLuck)
+            loot(Player.Luck)
 
         
         if(EnemyHealth > 0):
             input('\x1b[0;31;47m' + "Prepare to be attacked!!!! " + '\x1b[0m' + "\n Press Enter to Continue")
             print(clear)
             print("-----------------------")
-            PlayerHealth = attack(EnemyName, EnemyWeapon, EnemyAttack, EnemyStrength, PlayerName, PlayerArmor, PlayerHealth, PlayerOrgHealth, False, 0)
+            Player.Health = attack(EnemyName, EnemyWeapon, EnemyAttack, EnemyStrength, Player.Name, Player.Armor, Player.Health, Player.MaxHealth, False, 0, Player)
             input("Press Enter to Continue")
             print(clear)
         else:
             print('\x1b[0;31;47m' + "You Search For Loot" + '\x1b[0m')
-            loot(PlayerLuck) #loot the body
+            loot(Player.Luck) #loot the body
     
 
 
