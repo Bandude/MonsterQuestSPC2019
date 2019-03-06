@@ -24,45 +24,6 @@ def modCalc(value):
         profBonus = int(Decimal(calc).quantize(Decimal('1.'), rounding=ROUND_HALF_DOWN))
     return profBonus
 
-class I_Item:
-  def __init__(self, name, value, typ):
-    self.name = name
-    self.amount = value
-    self.typ = typ
-    print("You Found " + self.name )
-
-class PlayerClass:   #this is where you create a player
-    def __init__(self):
-        self.HitDice = 10                               #Hit Dice D&D healing and leveling
-        self.XP = 0
-        self.Level = 1
-        self.Prof = 2                                   #proficiency bonus
-        self.Strength = modCalc(18)
-        self.Constitution = modCalc(14)
-        self.Health = self.HitDice + self.Constitution   #staring only
-        self.Luck = 15
-        self.Armor = 18
-        self.MaxHealth = self.Health
-        self.Weapon = [8, 1, "Long Sword"] 
-        self.AtkBonus = self.Strength + self.Prof
-
-        response = input("What is your name? ")
-        type(response)
-        self.Name = response                       
-        print(clear)
-        
-
-    def printPlayer(self):
-        displayHealth(self.Name, self.Health, self.MaxHealth, self.Armor, self.Weapon)
-
-
-
-
-
-
-
-#return the modifier for the proficiency bonus
-
 
 
 #display the health
@@ -74,6 +35,87 @@ def displayHealth(name, currHealth, totalHealth, armor, weapon):
         health = 20
     printout = name.ljust(15) +'[' + '\x1b[3;31;40m' + ('█' * health) + ' ' * spaces +  '\x1b[0m' + '] '  + str(currHealth).ljust(3) + 'HP\n'.ljust(18) +  '\x1b[0;37;44m' + 'AC│╬│:' + str(armor).ljust(2) +  '\x1b[0m' +"  ══╫∞" + '\x1b[0;37;42m' + weapon[2].ljust(20) + ':' + str(weapon[0]).ljust(2) +  '\x1b[0m' 
     print(printout)
+
+
+class I_Item:
+  def __init__(self, name, value, typ):
+    self.name = name
+    self.amount = value
+    self.typ = typ
+    print("You Found " + self.name )
+
+class PlayerClass:   #this is where you create a player
+    
+    f = {}
+    
+
+    def __init__(self):    
+        self.XP = 0
+        self.Level = 1
+        self.Prof = 2                                   #proficiency bonus
+        self.Strength = modCalc(18)
+        self.Constitution = modCalc(14)
+        self.Dex = modCalc(14)                          #dex
+        self.Luck = 15
+        response = input("What is your name? ")
+        type(response)
+        self.Name = response                       
+        print(clear)
+
+    def addFeature(self, feature):
+        self.f[feature[0]] = [feature[1], feature[2], feature[3]]
+
+
+
+
+class Fighter(PlayerClass):
+
+    
+
+    def initialize(self):
+        self.HitDice = 10
+        self.Health = self.HitDice + self.Constitution   #staring only
+        self.OrigHealth = self.Health
+        self.MaxHealth = self.Health
+        self.AtkBonus = self.Strength + self.Prof
+        self.Armor = 18
+        self.Weapon = [8, 1, "Long Sword"] 
+        self.printPlayer()
+        self.addFeature(["secondWind", "Second Wind", 1, 1])           #second wind on level 1
+
+    def printPlayer(self):
+        displayHealth(self.Name, self.Health, self.MaxHealth, self.Armor, self.Weapon)
+
+    def secondWind(self):
+        self.Health += dice(self.HitDice, 1) + self.Level
+        if self.Health > self.OrigHealth:
+            self.Health = self.OrigHealth
+        self.f["Second Wind"][1] -= 1                #use skill
+        
+
+
+
+Player = Fighter()
+Player.initialize()
+
+Player.Health -= 5
+
+actions = {}
+for key, value in Player.f.items():
+    actions.update({value[0]:key})
+    print(value[0])
+choice = input("Your Choice: ")
+type(choice)
+
+
+print(actions)
+input("stop")
+Player.printPlayer()
+Player.secondWind()
+Player.printPlayer()
+
+
+
 
 #print death
 def deathGraphic():
@@ -338,10 +380,6 @@ def loot(luck):
         print("You Found Nothing")
         
 
-
-#Gets the Name of the Char
-Player = PlayerClass()
-Player.printPlayer()
 
 #Inventory, starts with single healing potion.
 PlayerInventory = [I_Item("Potion of Healing",dice(4,2) + 2, "heal")]    
