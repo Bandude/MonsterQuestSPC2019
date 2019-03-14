@@ -32,6 +32,7 @@ class I_Item:
     print("You Found " + self.name )
 
 class PlayerClass:   #this is where you create a player
+
     def __init__(self):
         self.HitDice = 10                               #Hit Dice D&D healing and leveling
         self.XP = 0
@@ -45,6 +46,7 @@ class PlayerClass:   #this is where you create a player
         self.MaxHealth = self.Health
         self.Weapon = [8, 1, "Long Sword"] 
         self.AtkBonus = self.Strength + self.Prof
+        
 
         response = input("What is your name? ")
         type(response)
@@ -57,11 +59,29 @@ class PlayerClass:   #this is where you create a player
 
 
 
+class Fighter(PlayerClass):
 
 
+    feat = {}
+    feat['SecondWind'] = ['SecondWind', 1, 1]  #name, currcharge, maxcharge
+
+    def SecondWind(self):
+        if feat['SecondWind'][1] > 0:
+            self.Health += dice(10, 1) + self.Level 
+            if self.Health > self.MaxHealth:
+                self.Health = self.MaxHealth
+            feat['SecondWind'][1] -= 1                 
+        else:
+            print("You need to rest to use that")                
 
 
-#return the modifier for the proficiency bonus
+Player2 = Fighter()
+Player2.Health = 5
+Player2.SecondWind()
+print(str(Player2.Health))
+Player2.SecondWind()
+
+input("hold")
 
 
 
