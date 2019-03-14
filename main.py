@@ -47,7 +47,7 @@ class I_Item:
 class PlayerClass:   #this is where you create a player
     
     f = {}
-    
+    featureCount = 0
 
     def __init__(self):    
         self.XP = 0
@@ -63,14 +63,15 @@ class PlayerClass:   #this is where you create a player
         print(clear)
 
     def addFeature(self, feature):
-        self.f[feature[0]] = [feature[1], feature[2], feature[3]]
+        self.featureCount += 1
+        self.f[self.featureCount] = [feature[0], feature[1], feature[2], feature[3]]
 
-
-
+    def rest(self):
+        for key in self.f:
+            self.f[key][2] = self.f[key][3]             #update the features to max
+        
 
 class Fighter(PlayerClass):
-
-    
 
     def initialize(self):
         self.HitDice = 10
@@ -81,43 +82,22 @@ class Fighter(PlayerClass):
         self.Armor = 18
         self.Weapon = [8, 1, "Long Sword"] 
         self.printPlayer()
-        self.addFeature(["secondWind", "Second Wind", 1, 1])           #second wind on level 1
+        self.addFeature(["secondWind", "Second Wind", 1, 1])           #second wind on level 1, method name, friendly name, current use, max use
 
     def printPlayer(self):
         displayHealth(self.Name, self.Health, self.MaxHealth, self.Armor, self.Weapon)
 
-    def secondWind(self):
-        self.Health += dice(self.HitDice, 1) + self.Level
-        if self.Health > self.OrigHealth:
-            self.Health = self.OrigHealth
-        self.f["Second Wind"][1] -= 1                #use skill
+    def secondWind(self, featurePos):
+        if(self.f[featurePos][2] > 0):
+            roll = dice(self.HitDice, 1)
+            print("You Rolled " + str(roll) + " you heal for " + str(roll+self.Level))
+            self.Health += roll + self.Level
+            if self.Health > self.OrigHealth:
+                self.Health = self.OrigHealth
+            self.f[featurePos][2] -= 1                                   #use skill
+        else:
+            print("You need to rest before you can use again")
         
-
-
-class Fighter(PlayerClass):
-
-
-Player = Fighter()
-Player.initialize()
-
-Player.Health -= 5
-
-actions = {}
-for key, value in Player.f.items():
-    actions.update({value[0]:key})
-    print(value[0])
-choice = input("Your Choice: ")
-type(choice)
-
-
-print(actions)
-input("stop")
-Player.printPlayer()
-Player.secondWind()
-Player.printPlayer()
-
-
-
 
 #print death
 def deathGraphic():
@@ -293,7 +273,9 @@ def levelCheck(Player):
             
         
         Player.Prof = L[Player.Level][2] + Player.Strength #use chart to figure out proficiency bonus
+        Player.rest()
         Player.printPlayer()
+
         
  
     
@@ -329,7 +311,7 @@ def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, 
                 exit()
             return 0 
     else:
-        print('\x1b[1;36;43m' + attacker + " Missed!!" +  '\x1b[0m')
+        print('\x1b[0;31;47m' + attacker + " Missed!!" +  '\x1b[0m')
         print(defender + " has " + str(defHealth) + " out of " + str(defOrigHealth) + " health remaining")
         return defHealth
 
@@ -349,6 +331,16 @@ def openInventory(playerInventory):
         del(playerInventory[c]) #deletes the inventory item
         return pi[c]            #returns the inventory item so you know how to use it
     
+
+# open selection for using a specific feature
+def selectFeature(Player):
+    actions = {}
+    for key, value in Player.f.items():
+        actions.update({key:value[0]})
+        print(str(key) + ") " + value[1])
+    choice = input("Your Choice: ")
+    type(choice)
+    getattr(Player, actions[int(choice)])(int(choice))
 
 #healing function 
 def heal(item):
@@ -383,6 +375,9 @@ def loot(luck):
         
 
 
+#Init Player and Player's class
+Player = Fighter()
+Player.initialize()
 #Inventory, starts with single healing potion.
 PlayerInventory = [I_Item("Potion of Healing",dice(4,2) + 2, "heal")]    
 
@@ -442,8 +437,9 @@ while totalEnemies > 0:
         print("-----------------------")
         #List Options
         menu = {
-                "I": "Inventory",
                 "A": "Attack with " + Player.Weapon[2],
+                "F": "Use Feature",
+                "I": "Inventory",
                 "L": "Loot"
         } 
         for key, value in menu.items():
@@ -477,6 +473,8 @@ while totalEnemies > 0:
             EnemyHealth = attack(Player.Name, Player.Weapon, Player.AtkBonus, Player.Strength, EnemyName, EnemyArmor, EnemyHealth, EnemyOrigHealth, True, EnemyXP, Player)
         elif(choice == "L"): #If Loot
             loot(Player.Luck)
+        elif(choice == "F"):
+            selectFeature(Player)
 
         
         if(EnemyHealth > 0):
