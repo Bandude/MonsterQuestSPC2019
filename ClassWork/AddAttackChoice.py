@@ -1,6 +1,6 @@
 
     while EnemyHealth > 0:
-         print("-----------------------")
+        print("-----------------------")
         choice = input("Choose What to Do: \n S - Attack with Sword \n Your Choice: ")
         type(choice)
         print(clear)
