@@ -8,7 +8,7 @@ def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, 
        defHealth = defHealth - damage
        if defHealth > 0:
            print('\x1b[1;31;40m' + attacker + " Hits for " + str(damage) + '\x1b[0m' )
-           displayHit()
+           #displayHit()
            print(defender + " has " + str(defHealth) + " out of " + str(defOrigHealth) + " health remaining")
            return defHealth
        else:
@@ -16,7 +16,7 @@ def attack(attacker, weapon, atkBonus, strength, defender, defArmor, defHealth, 
            if(isEnemy):
                enemyArray[defender][1] = 0 #Update the Enemy health
            else:
-               deathGraphic()
+               #deathGraphic()
                print("You DIED!!!  Game OVER!!!!")
                exit()
            return 0
